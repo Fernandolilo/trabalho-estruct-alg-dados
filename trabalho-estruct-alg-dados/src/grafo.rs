@@ -40,6 +40,10 @@ impl Grafo {
         let mut visitados = HashSet::new();
         let mut resultado = Vec::new();
 
+        if !self.conexoes.contains_key(inicio) {
+            return resultado;
+        }
+
         fila.push_back(inicio.to_string());
         visitados.insert(inicio.to_string());
 
@@ -60,33 +64,35 @@ impl Grafo {
     }
 
     pub fn recomendar(
-    &self,
-    cliente: &str,
-    produtos_comprados: &HashSet<String>,
+        &self,
+        cliente: &str,
+        produtos_comprados: &HashSet<String>,
     ) -> Vec<(String, usize)> {
         let mut recomendacoes: HashMap<String, usize> = HashMap::new();
 
         let percurso = self.bfs(cliente);
 
         for vertice in percurso {
-            if vertice.starts_with("Produto:")
-                && !produtos_comprados.contains(&vertice)
-            {
-                // Conta quantas vezes o produto aparece
-                let pontuacao = self
-                    .conexoes
-                    .values()
-                    .filter(|vizinhos| vizinhos.contains(&vertice))
-                    .count();
-
-                recomendacoes.insert(vertice, pontuacao);
+            if !vertice.starts_with("Produto:") {
+                continue;
             }
+
+            if produtos_comprados.contains(&vertice) {
+                continue;
+            }
+
+            let pontuacao = self
+                .conexoes
+                .values()
+                .filter(|vizinhos| vizinhos.contains(&vertice))
+                .count();
+
+            recomendacoes.insert(vertice, pontuacao);
         }
 
         let mut resultado: Vec<(String, usize)> =
             recomendacoes.into_iter().collect();
 
-        // Ordena da maior pontuação para a menor
         resultado.sort_by(|a, b| b.1.cmp(&a.1));
 
         resultado
